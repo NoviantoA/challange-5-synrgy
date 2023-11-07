@@ -99,10 +99,10 @@ public class Response {
         return response;
     }
 
-    public Map<String, Object> errorTemplateResponse(Object message, int status) {
+    public Map<String, Object> routeNotFound(Object message) {
         Map<String, Object> response = new HashMap<>();
         response.put("message", message);
-        response.put("status", status);
+        response.put("status", 404);
         return response;
     }
 

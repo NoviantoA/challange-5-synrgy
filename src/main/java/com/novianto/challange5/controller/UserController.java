@@ -1,0 +1,110 @@
+package com.novianto.challange5.controller;
+
+import com.novianto.challange5.dto.UserDto;
+import com.novianto.challange5.entity.User;
+import com.novianto.challange5.repository.UserRepository;
+import com.novianto.challange5.service.UserService;
+import com.novianto.challange5.util.ConfigValidation;
+import com.novianto.challange5.util.Response;
+import com.novianto.challange5.util.SimpleStringUtil;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/v1/user")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private SimpleStringUtil simpleStringUtil;
+    @Autowired
+    public Response response;
+
+    @PostMapping(value = {"/save", "/save/"})
+    public ResponseEntity<Map> saveUser(@RequestBody UserDto request) {
+        try {
+            return new ResponseEntity<Map>(userService.saveUser(request), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<Map>(response.routeNotFound(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping(value = {"/update/{userId}", "/update/{userId}/"})
+    public ResponseEntity<Map> updateUser(@RequestBody UserDto request, @PathVariable("userId") UUID userId) {
+        try {
+            if (userId == null) {
+                return new ResponseEntity<Map>(response.routeNotFound(ConfigValidation.ID_USER_REQUIRED), HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<Map>(userService.updateUser(userId, request), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<Map>(response.routeNotFound(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping(value = {"/delete/{userId}", "/delete/{userId}/"})
+    public ResponseEntity<Map> deleteUser(@PathVariable("userId") UUID userId) {
+        try {
+            return new ResponseEntity<Map>(userService.deleteUser(userId), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<Map>(response.routeNotFound(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR); // 500
+        }
+    }
+
+    @GetMapping(value = {"/get/{userId}", "/get/{userId}/"})
+    public ResponseEntity<Map> getUserById(@PathVariable("userId") UUID userId) {
+        try {
+            return new ResponseEntity<Map>(response.successResponse(userRepository.getByIdUser(userId)), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<Map>(response.routeNotFound(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR); // 500
+        }
+    }
+
+    @GetMapping("/all-users")
+    public Page<User> getAllUser(
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return userService.getAllUser(pageable);
+    }
+
+    @GetMapping(value = {"/list-spec", "/list-spec/"})
+    public ResponseEntity<Map> listUserHeaderSpec(
+            @RequestParam() Integer page,
+            @RequestParam(required = true) Integer size,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String orderby,
+            @RequestParam(required = false) String ordertype) {
+        Pageable show_data = simpleStringUtil.getShort(orderby, ordertype, page, size);
+        Specification<User> spec =
+                ((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    if (username != null && !username.isEmpty()) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("username")), "%" + username.toLowerCase() + "%"));
+                    }
+                    if (email != null && !email.isEmpty()) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), "%" + email.toLowerCase() + "%"));
+                    }
+                    return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+                });
+        Page<User> list = userRepository.findAll(spec, show_data);
+        return new ResponseEntity<Map>(response.successResponse(list), new HttpHeaders(), HttpStatus.OK);
+    }
+
+}

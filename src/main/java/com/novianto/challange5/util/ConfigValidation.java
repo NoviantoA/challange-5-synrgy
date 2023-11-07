@@ -10,6 +10,11 @@ public class ConfigValidation {
     public static Integer STATUS_CODE_BAD_REQUEST = 400;
     public static Integer STATUS_CODE_INTERNAL_SERVER_ERROR = 500;
     public static String MERCHANT_REQUIRED = "Merchant is Required";
+    public static String ID_USER_REQUIRED = "Id User is Required";
+    public static String ID_MERCHANT_REQUIRED = "Id Merchant is Required";
+    public static String ID_ORDER_REQUIRED = "Id Order is Required";
+    public static String ID_PRODUCT_REQUIRED = "Id Product is Required";
+    public static String ID_ORDER_DETAIL_REQUIRED = "Id Order Detail is Required";
     public static String USER_REQUIRED = "User is Required";
     public static String ORDER_REQUIRED = "Order is Required";
     public static String PRODUCT_REQUIRED = "Product is Required";
