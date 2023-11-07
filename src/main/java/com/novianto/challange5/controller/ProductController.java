@@ -69,13 +69,13 @@ public class ProductController {
     @GetMapping(value = {"/get/{productId}", "/get/{productId}/"})
     public ResponseEntity<Map> getProductById(@PathVariable("productId") UUID productId) {
         try {
-            return new ResponseEntity<Map>(response.successResponse(productRepository.getProductById(productId)), HttpStatus.OK);
+            return new ResponseEntity<Map>(response.successResponse(productRepository.getByIdProduct(productId)), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<Map>(response.routeNotFound(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @GetMapping("/all-merchants")
+    @GetMapping("/all-products")
     public Page<Product> getAllProduct(
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "10") int size) {

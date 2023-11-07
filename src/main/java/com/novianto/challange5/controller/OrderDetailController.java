@@ -79,7 +79,7 @@ public class OrderDetailController {
         }
     }
 
-    @GetMapping("/all-merchants")
+    @GetMapping("/all-order-details")
     public Page<OrderDetail> getAllOrderDetail(
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "10") int size) {

@@ -40,8 +40,6 @@ public class OrderServiceImpl implements OrderService {
         } else {
             if (!response.isValidDate(orderDto.getOrderTime())) {
                 return response.errorResponse(ConfigValidation.ORDER_TIME_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
-            } else if (!response.defaultIfNull(orderDto.isCompleted())) {
-                return response.errorResponse(ConfigValidation.ORDER_COMPLETED_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
             }
         }
 
@@ -50,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
             order.setId(UUID.randomUUID());
             order.setOrderTime(orderDto.getOrderTime());
             order.setDestinationAddress(orderDto.getDestinationAddress());
-            order.setCompleted(orderDto.isCompleted());
+            order.setCompleted(false);
 
             if (orderDto.getUser() == null) {
                 return response.errorResponse(ConfigValidation.USER_REQUIRED, ConfigValidation.STATUS_CODE_BAD_REQUEST);
@@ -65,7 +63,7 @@ public class OrderServiceImpl implements OrderService {
                 Order savedOrder = orderRepository.save(order);
                 responseMap = response.successResponse(savedOrder);
             } else {
-                return response.errorResponse(ConfigValidation.ID_MERCHANT_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
+                return response.errorResponse(ConfigValidation.ID_USER_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
             }
         } catch (DataAccessException e) {
             responseMap = response.errorResponse(e.getMessage(), ConfigValidation.STATUS_CODE_INTERNAL_SERVER_ERROR);

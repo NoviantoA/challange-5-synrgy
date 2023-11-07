@@ -75,7 +75,7 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/all-merchants")
+    @GetMapping("/all-orders")
     public Page<Order> getAllOrder(
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "10") int size) {

@@ -42,20 +42,28 @@ public class Response {
         return pattern.matcher(priceString).matches();
     }
 
-    public boolean isValidDate(Object dateObj) {
-        if (dateObj == null) {
+//    public boolean isValidDate(Object dateObj) {
+//        if (dateObj == null) {
+//            return false;
+//        }
+//        String dateStr = String.valueOf(dateObj);
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//        dateFormat.setLenient(false);
+//        try {
+//            dateFormat.parse(dateStr);
+//            return true;
+//        } catch (ParseException e) {
+//            return false;
+//        }
+//    }
+
+    public boolean isValidDate(Date date) {
+        if (date == null) {
             return false;
         }
-        String dateStr = String.valueOf(dateObj);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateFormat.setLenient(false);
-        try {
-            Date date = dateFormat.parse(dateStr);
-            return true;
-        } catch (ParseException e) {
-            return false;
-        }
+        return true;
     }
+
 
     public boolean isValidQuantity(Integer quantity) {
         if (quantity == null) {
