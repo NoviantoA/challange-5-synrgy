@@ -4,10 +4,15 @@ import com.novianto.challange5.dto.UserDto;
 import com.novianto.challange5.entity.User;
 import com.novianto.challange5.repository.UserRepository;
 import com.novianto.challange5.service.UserService;
+import com.novianto.challange5.service.impl.ReportUser;
 import com.novianto.challange5.util.ConfigValidation;
 import com.novianto.challange5.util.Response;
 import com.novianto.challange5.util.SimpleStringUtil;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.http.HttpServletResponse;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperPrint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +40,11 @@ public class UserController {
     @Autowired
     private SimpleStringUtil simpleStringUtil;
     @Autowired
-    public Response response;
+    private Response response;
+    @Autowired
+    private HttpServletResponse responseHttp;
+    @Autowired
+    private ReportUser reportUser;
 
     @PostMapping(value = {"/save", "/save/"})
     public ResponseEntity<Map> saveUser(@RequestBody UserDto request) {
@@ -105,6 +115,14 @@ public class UserController {
                 });
         Page<User> list = userRepository.findAll(spec, show_data);
         return new ResponseEntity<Map>(response.successResponse(list), new HttpHeaders(), HttpStatus.OK);
+    }
+
+    @GetMapping("/reports")
+    public void getUserReport() throws JRException, IOException {
+        responseHttp.setContentType("application/pdf");
+        responseHttp.setHeader("Content-Disposition", "attachment; filename=\"user_list.pdf\"");
+        JasperPrint jasperPrint = reportUser.jasperPrint();
+        JasperExportManager.exportReportToPdfStream(jasperPrint, responseHttp.getOutputStream());
     }
 
 }

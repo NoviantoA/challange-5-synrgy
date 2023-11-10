@@ -1,11 +1,14 @@
 package com.novianto.challange5;
 
+import com.novianto.challange5.controller.fileupload.FileStorageProperties;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
 @OpenAPIDefinition
+@EnableConfigurationProperties({FileStorageProperties.class})
 public class Challange6SynrgyApplication {
 
 	public static void main(String[] args) {
