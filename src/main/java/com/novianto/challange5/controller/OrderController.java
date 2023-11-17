@@ -1,6 +1,7 @@
 package com.novianto.challange5.controller;
 
 import com.novianto.challange5.dto.OrderDto;
+import com.novianto.challange5.entity.Merchant;
 import com.novianto.challange5.entity.Order;
 import com.novianto.challange5.repository.OrderRepository;
 import com.novianto.challange5.service.OrderService;
@@ -81,6 +82,14 @@ public class OrderController {
             @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return orderService.getAllOrder(pageable);
+    }
+
+    @GetMapping("/completed")
+    public Page<Order> getAllOrderCompleted(
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return orderRepository.findCompletedOrders(pageable);
     }
 
     @GetMapping(value = {"/list-spec", "/list-spec/"})

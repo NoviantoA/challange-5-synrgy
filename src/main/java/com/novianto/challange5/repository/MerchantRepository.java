@@ -37,6 +37,12 @@ public interface MerchantRepository extends JpaRepository<Merchant, UUID>, JpaSp
     @Query("select count(m) from Merchant m where m.merchantName = ?1")
     long countByMerchantName(Double totalPrice);
 
+    @Query("SELECT m FROM Merchant m WHERE m.open = true")
+    Page<Merchant> findOpenMerchants(Pageable pageable);
+
+    @Query("SELECT m FROM Merchant m WHERE m.open = false")
+    Page<Merchant> findClosedMerchants(Pageable pageable);
+
     long count();
 
     @Query("select sum(m.id) from Merchant m")

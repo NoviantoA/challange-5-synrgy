@@ -34,6 +34,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     @Query("select count(p) from Product p where p.productName = ?1")
     long countByName(String name);
 
+    boolean existsByProductName(String productName);
+
     long count();
 
     @Query("select sum(p.id) from Product p")

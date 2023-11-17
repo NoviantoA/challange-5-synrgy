@@ -87,6 +87,14 @@ public class OrderDetailController {
         return orderDetailService.getAllOrderDetail(pageable);
     }
 
+    @GetMapping("/user/{userId}")
+    public Page<OrderDetail> getAllOrderDetailByIdUser(@PathVariable UUID userId,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return orderDetailService.getOrderDetailByIdUser(userId, pageable);
+    }
+
     @GetMapping(value = {"/list-spec", "/list-spec/"})
     public ResponseEntity<Map> listOrderDetailHeaderSpec(
             @RequestParam() Integer page,

@@ -38,34 +38,43 @@ public class ProductServiceImpl implements ProductService {
         if (productDto == null) {
             return response.errorResponse(ConfigValidation.PRODUCT_DATA_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         } else {
-            if (!response.isValidName(productDto.getProductName())) {
+            if (productDto.getProductName() == null || productDto.getProductName().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.PRODUCT_NAME_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            } else if (!response.isValidName(productDto.getProductName())) {
                 return response.errorResponse(ConfigValidation.PRODUCT_NAME_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            } else if (productDto.getPrice() == null) {
+                return response.errorResponse(ConfigValidation.PRICE_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
             } else if (!response.isValidPrice(productDto.getPrice())) {
                 return response.errorResponse(ConfigValidation.PRICE_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            } else if (productDto.getMerchant() == null || productDto.getMerchant().getId() == null || productDto.getMerchant().getId().toString().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.MERCHANT_ID_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
             }
         }
 
         try {
-            Product product = new Product();
-            product.setId(UUID.randomUUID());
-            product.setProductName(productDto.getProductName());
-            product.setPrice(productDto.getPrice());
-
-            if (productDto.getMerchant() == null) {
-                return response.errorResponse(ConfigValidation.MERCHANT_REQUIRED, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            if (productRepository.existsByProductName(productDto.getProductName())) {
+                return response.errorResponse(ConfigValidation.PRODUCT_NAME_ALREADY_EXISTS, ConfigValidation.STATUS_CODE_BAD_REQUEST);
             }
 
-            UUID merchantId = productDto.getMerchant().getId();
-            Optional<Merchant> merchantOptional = merchantRepository.findById(merchantId);
+            UUID merchantId = UUID.fromString(productDto.getMerchant().getId().toString().trim());
+            Optional<Merchant> merchantOptional = Optional.ofNullable(merchantRepository.getByIdMerchant(merchantId));
 
             if (merchantOptional.isPresent()) {
+                Product product = new Product();
+                product.setId(UUID.randomUUID());
+                product.setProductName(productDto.getProductName());
+                product.setPrice(productDto.getPrice());
+
                 Merchant merchant = merchantOptional.get();
                 product.setMerchant(merchant.getId());
+
                 Product savedProduct = productRepository.save(product);
                 responseMap = response.successResponse(savedProduct);
             } else {
                 return response.errorResponse(ConfigValidation.ID_MERCHANT_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
             }
+        } catch (IllegalArgumentException e) {
+            return response.errorResponse(ConfigValidation.MERCHANT_ID_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         } catch (DataAccessException e) {
             responseMap = response.errorResponse(e.getMessage(), ConfigValidation.STATUS_CODE_INTERNAL_SERVER_ERROR);
         }
@@ -83,10 +92,28 @@ public class ProductServiceImpl implements ProductService {
             if (existingProduct.isPresent()) {
                 Product updatedProduct = existingProduct.get();
 
+                if (productDto.getProductName() != null && productDto.getProductName().trim().isEmpty()) {
+                    return response.errorResponse(ConfigValidation.PRODUCT_NAME_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+                if (productDto.getPrice() != null && !response.isValidPrice(productDto.getPrice())) {
+                    return response.errorResponse(ConfigValidation.PRICE_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+                if (productDto.getMerchant() == null || productDto.getMerchant().getId() == null || productDto.getMerchant().getId().toString().trim().isEmpty()) {
+                    return response.errorResponse(ConfigValidation.MERCHANT_ID_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+
+                // Check if merchantId exists
+                UUID merchantId = UUID.fromString(productDto.getMerchant().getId().toString().trim());
+                Optional<Merchant> merchantOptional = merchantRepository.findById(merchantId);
+
+                if (!merchantOptional.isPresent()) {
+                    return response.errorResponse(ConfigValidation.ID_MERCHANT_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
+                }
+
+                // Update the product
                 if (productDto.getProductName() != null) {
                     updatedProduct.setProductName(productDto.getProductName());
                 }
-
                 if (productDto.getPrice() != null) {
                     updatedProduct.setPrice(productDto.getPrice());
                 }
@@ -96,6 +123,9 @@ public class ProductServiceImpl implements ProductService {
             } else {
                 responseMap = response.errorResponse(ConfigValidation.ID_PRODUCT_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
             }
+        } catch (IllegalArgumentException e) {
+            // Handle invalid UUID format
+            return response.errorResponse(ConfigValidation.MERCHANT_ID_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         } catch (Exception e) {
             responseMap = response.errorResponse(e.getMessage(), ConfigValidation.STATUS_CODE_INTERNAL_SERVER_ERROR);
         }

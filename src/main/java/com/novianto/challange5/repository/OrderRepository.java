@@ -1,5 +1,6 @@
 package com.novianto.challange5.repository;
 
+import com.novianto.challange5.entity.Merchant;
 import com.novianto.challange5.entity.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +38,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecific
 
     @Query("select count(o) from Order o where o.destinationAddress = ?1")
     long countByDestinationAddress(String destinationAddress);
+
+    @Query("SELECT o FROM Order o WHERE o.completed = true")
+    Page<Order> findCompletedOrders(Pageable pageable);
 
     long count();
 

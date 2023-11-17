@@ -40,48 +40,59 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         if (orderDetailDto == null) {
             return response.errorResponse(ConfigValidation.ORDER_DETAIL_DATA_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         } else {
-            if (!response.isValidQuantity(orderDetailDto.getQuantity())) {
+            if (orderDetailDto.getQuantity() == null || !response.isValidQuantity(orderDetailDto.getQuantity())) {
                 return response.errorResponse(ConfigValidation.QUANTITY_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
-            } else if (!response.isValidPrice(orderDetailDto.getTotalPrice())) {
-                return response.errorResponse(ConfigValidation.PRICE_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
             }
         }
 
         try {
-            OrderDetail orderDetail = new OrderDetail();
-            orderDetail.setId(UUID.randomUUID());
-            orderDetail.setQuantity(orderDetailDto.getQuantity());
-            orderDetail.setTotalPrice(orderDetailDto.getTotalPrice());
+            if (orderDetailDto.getProduct() == null || orderDetailDto.getProduct().getId() == null || orderDetailDto.getProduct().getId().toString().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.PRODUCT_REQUIRED, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            }
+            if (orderDetailDto.getOrder() == null || orderDetailDto.getOrder().getId() == null || orderDetailDto.getOrder().getId().toString().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.ORDER_REQUIRED, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            }
 
-            UUID orderId = orderDetailDto.getOrder().getId();
+            UUID orderId = UUID.fromString(orderDetailDto.getOrder().getId().toString().trim());
+            UUID productId = UUID.fromString(orderDetailDto.getProduct().getId().toString().trim());
+
             Optional<Order> optionalOrder = orderRepository.findById(orderId);
-            UUID productId = orderDetailDto.getProduct().getId();
             Optional<Product> optionalProduct = productRepository.findById(productId);
 
-            if (orderDetailDto.getOrder() == null) {
-                return response.errorResponse(ConfigValidation.ORDER_REQUIRED, ConfigValidation.STATUS_CODE_BAD_REQUEST);
-            } else if (orderDetailDto.getProduct() == null) {
-                return response.errorResponse(ConfigValidation.PRODUCT_REQUIRED, ConfigValidation.STATUS_CODE_BAD_REQUEST);
-            } else if (!optionalOrder.isPresent()) {
+            if (!optionalOrder.isPresent()) {
                 return response.errorResponse(ConfigValidation.ID_ORDER_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
-            } else if (!optionalProduct.isPresent()) {
+            }
+            if (!optionalProduct.isPresent()) {
                 return response.errorResponse(ConfigValidation.ID_PRODUCT_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
             }
 
-            if (optionalProduct.isPresent() && optionalOrder.isPresent()) {
-                Order order = optionalOrder.get();
-                orderDetail.setOrder(order);
-                Product product = optionalProduct.get();
-                orderDetail.setProduct(product);
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setId(UUID.randomUUID());
+            orderDetail.setQuantity(orderDetailDto.getQuantity());
 
-                OrderDetail savedOrderDetail = orderDetailRepository.save(orderDetail);
-                responseMap = response.successResponse(savedOrderDetail);
+            if (optionalProduct.isPresent()) {
+                Product product = optionalProduct.get();
+                Double totalPrice = product.getPrice() * orderDetailDto.getQuantity();
+                orderDetail.setTotalPrice(totalPrice);
             }
+
+            Order order = optionalOrder.get();
+            orderDetail.setOrder(order);
+
+            Product product = optionalProduct.get();
+            orderDetail.setProduct(product);
+
+            OrderDetail savedOrderDetail = orderDetailRepository.save(orderDetail);
+            responseMap = response.successResponse(savedOrderDetail);
+
+        } catch (IllegalArgumentException e) {
+            return response.errorResponse(ConfigValidation.USER_ID_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         } catch (DataAccessException e) {
             responseMap = response.errorResponse(e.getMessage(), ConfigValidation.STATUS_CODE_INTERNAL_SERVER_ERROR);
         }
         return responseMap;
     }
+
 
     @Override
     public Map<String, Object> updateOrderDetail(UUID idOrderDetail, OrderDetailDto orderDetailDto) {
@@ -92,7 +103,16 @@ public class OrderDetailServiceImpl implements OrderDetailService {
 
             if (existingOrderDetail.isPresent()) {
                 OrderDetail updatedOrderDetail = existingOrderDetail.get();
-                if (orderDetailDto.getQuantity() != null) {
+
+                if (orderDetailDto.getQuantity() != null && !response.isValidQuantity(orderDetailDto.getQuantity())) {
+                    return response.errorResponse(ConfigValidation.QUANTITY_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+
+                if (orderDetailDto.getTotalPrice() != null && !response.isValidPrice(orderDetailDto.getTotalPrice())) {
+                    return response.errorResponse(ConfigValidation.PRICE_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+
+                 if (orderDetailDto.getQuantity() != null) {
                     updatedOrderDetail.setQuantity(orderDetailDto.getQuantity());
                 }
                 if (orderDetailDto.getTotalPrice() != null) {
@@ -107,6 +127,7 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         } catch (Exception e) {
             responseMap = response.errorResponse(e.getMessage(), ConfigValidation.STATUS_CODE_INTERNAL_SERVER_ERROR);
         }
+
         return responseMap;
     }
 
@@ -145,5 +166,10 @@ public class OrderDetailServiceImpl implements OrderDetailService {
             responseMap = response.errorResponse(ConfigValidation.ID_ORDER_DETAIL_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
         }
         return responseMap;
+    }
+
+    @Override
+    public Page<OrderDetail> getOrderDetailByIdUser(UUID userId, Pageable pageable) {
+        return orderDetailRepository.findOrderDetailByUserId(userId, pageable);
     }
 }

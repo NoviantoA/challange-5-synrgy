@@ -18,4 +18,6 @@ public interface OrderDetailService {
     Map<String, Object> deleteOrderDetail(UUID idOrderDetail);
 
     Map<String, Object> getOrderDetailById(UUID idOrderDetail);
+
+    Page<OrderDetail> getOrderDetailByIdUser(UUID userId, Pageable pageable);
 }

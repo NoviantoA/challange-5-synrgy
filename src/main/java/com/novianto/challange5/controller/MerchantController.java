@@ -83,6 +83,22 @@ public class MerchantController {
         return merchantService.getAllMerchant(pageable);
     }
 
+    @GetMapping("/open")
+    public Page<Merchant> getAllMerchantOpen(
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return merchantService.getOpenMerchants(pageable);
+    }
+
+    @GetMapping("/close")
+    public Page<Merchant> getAllMerchantClose(
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return merchantService.getCloseMerchants(pageable);
+    }
+
     @GetMapping(value = {"/list-spec", "/list-spec/"})
     public ResponseEntity<Map> listMerchantHeaderSpec(
             @RequestParam() Integer page,

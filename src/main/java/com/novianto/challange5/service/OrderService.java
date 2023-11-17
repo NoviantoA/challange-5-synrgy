@@ -1,6 +1,7 @@
 package com.novianto.challange5.service;
 
 import com.novianto.challange5.dto.OrderDto;
+import com.novianto.challange5.entity.Merchant;
 import com.novianto.challange5.entity.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,4 +20,6 @@ public interface OrderService {
     Map<String, Object> deleteOrder(UUID idOrder);
 
     Map<String, Object> getOrderById(UUID idOrder);
+
+    Page<Order> getCompletedOrders(Pageable pageable);
 }

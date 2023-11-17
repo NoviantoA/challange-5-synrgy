@@ -33,9 +33,23 @@ public class ConfigValidation {
     public  static  String ORDER_DATA_INVALID = "Order Data is Invalid.";
     public  static  String ORDER_DETAIL_DATA_INVALID = "Order Detail Data is Invalid.";
     public  static  String PRODUCT_NAME_NOT_VALID = "Product Name Not Invalid.";
+    public  static  String MERCHANT_ID_INVALID = "Id Merchant Not Invalid.";
+    public  static  String USER_ID_INVALID = "Id User Not Invalid.";
     public  static  String PRICE_NOT_VALID = "Product Price Not Invalid.";
     public  static  String ORDER_TIME_NOT_VALID = "Order Time Not Invalid.";
     public  static  String ORDER_COMPLETED_NOT_VALID = "Order Completed Not Invalid.";
+    public  static  String MERCHANT_NAME_EMPTY = "Merchant Name Must Have Value.";
+    public  static  String MERCHANT_LOCATION_EMPTY = "Merchant Location Must Have Value.";
+    public  static  String PRODUCT_NAME_EMPTY = "Product Name Must Have Value.";
+    public  static  String PRICE_EMPTY = "Price Must Have Value.";
+    public  static  String USERNAME_EMPTY = "Username Must Have Value.";
+    public  static  String MERCHANT_ID_EMPTY = "Id Merchant Must Have Value.";
+    public  static  String EMAIL_EMPTY = "Email Must Have Value.";
+    public  static  String PASSWORD_EMPTY = "Password Must Have Value.";
+    public  static  String ORDER_TIME_EMPTY = "Order Time Must Have Value.";
+    public  static  String DESTINATION_ADDRESS_EMPTY = "Destination Order Must Have Value.";
+    public  static  String EMAIL_ALREADY_EXISTS = "Email Is Already Exist.";
+    public  static  String PRODUCT_NAME_ALREADY_EXISTS = "Product Name Already Exist.";
     public  static  String SUCCESS = "Success.";
 
 }

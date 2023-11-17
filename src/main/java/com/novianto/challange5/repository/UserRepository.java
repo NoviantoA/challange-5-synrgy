@@ -34,6 +34,11 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     @Query("select count(u) from User u where u.username = ?1")
     long countByUsername(String username);
 
+    boolean existsByEmailAddress(String email);
+
+    @Query("SELECT u FROM User u JOIN u.orders o JOIN o.orderDetails od WHERE od.id = :orderDetailId")
+    Page<User> findByOrderDetailId(@Param("orderDetailId") UUID orderDetailId, Pageable pageable);
+
     long count();
 
     @Query("select sum(u.id) from User u")

@@ -34,14 +34,24 @@ public class UserServiceImpl implements UserService {
     public Map<String, Object> saveUser(UserDto userDto) {
         Map<String, Object> responseMap = new HashMap<>();
 
-        if (userDto == null) {
+        if (userDto == null || userDto.getUsername() == null || userDto.getEmailAddress() == null || userDto.getPassword() == null) {
             return response.errorResponse(ConfigValidation.USER_DATA_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         } else {
-            if (!response.isValidName(userDto.getUsername())) {
+            if (userDto.getUsername().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.USERNAME_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            } else if (userDto.getEmailAddress().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.EMAIL_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            } else if (userDto.getPassword().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.PASSWORD_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            } else if (!response.isValidName(userDto.getUsername())) {
                 return response.errorResponse(ConfigValidation.USERNAME_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
             } else if (!response.isValidEmail(userDto.getEmailAddress())) {
                 return response.errorResponse(ConfigValidation.EMAIL_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
             }
+        }
+
+        if (userRepository.existsByEmailAddress(userDto.getEmailAddress())) {
+            return response.errorResponse(ConfigValidation.EMAIL_ALREADY_EXISTS, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         }
 
         try {
@@ -60,6 +70,7 @@ public class UserServiceImpl implements UserService {
         return responseMap;
     }
 
+
     @Override
     public Map<String, Object> updateUser(UUID idUser, UserDto userDto) {
         Map<String, Object> responseMap = new HashMap<>();
@@ -70,6 +81,18 @@ public class UserServiceImpl implements UserService {
             if (existingUser.isPresent()) {
                 User updatedUser = existingUser.get();
 
+                if (userDto.getUsername() != null && userDto.getUsername().trim().isEmpty()) {
+                    return response.errorResponse(ConfigValidation.USERNAME_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+                if (userDto.getEmailAddress() != null && userDto.getEmailAddress().trim().isEmpty()) {
+                    return response.errorResponse(ConfigValidation.EMAIL_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+
+                if (userDto.getEmailAddress() != null && !userDto.getEmailAddress().equals(updatedUser.getEmailAddress()) &&
+                        userRepository.existsByEmailAddress(userDto.getEmailAddress())) {
+                    return response.errorResponse(ConfigValidation.EMAIL_ALREADY_EXISTS, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+
                 if (userDto.getUsername() != null) {
                     updatedUser.setUsername(userDto.getUsername());
                 }
@@ -79,6 +102,7 @@ public class UserServiceImpl implements UserService {
                 if (userDto.getPassword() != null) {
                     updatedUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
                 }
+
                 User savedUser = userRepository.save(updatedUser);
                 responseMap = response.successResponse(savedUser);
             } else {

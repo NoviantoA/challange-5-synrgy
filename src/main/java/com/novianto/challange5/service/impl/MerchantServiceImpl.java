@@ -6,6 +6,7 @@ import com.novianto.challange5.repository.MerchantRepository;
 import com.novianto.challange5.service.MerchantService;
 import com.novianto.challange5.util.ConfigValidation;
 import com.novianto.challange5.util.Response;
+import io.micrometer.common.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
@@ -33,6 +34,10 @@ public class MerchantServiceImpl implements MerchantService {
 
         if (merchantDto == null) {
             return response.errorResponse(ConfigValidation.MERCHANT_DATA_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+        } else if (StringUtils.isBlank(merchantDto.getMerchantName())) {
+            return response.errorResponse(ConfigValidation.MERCHANT_NAME_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+        } else if (StringUtils.isBlank(merchantDto.getMerchantLocation())) {
+            return response.errorResponse(ConfigValidation.MERCHANT_LOCATION_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         } else if (!response.isValidName(merchantDto.getMerchantName())) {
             return response.errorResponse(ConfigValidation.MERCHANT_NAME_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         }
@@ -47,8 +52,7 @@ public class MerchantServiceImpl implements MerchantService {
             Optional<Merchant> optionalMerchant = Optional.of(merchantRepository.save(merchant));
 
             responseMap = response.successResponse(optionalMerchant.get());
-        } catch (
-                DataAccessException e) {
+        } catch (DataAccessException e) {
             responseMap = response.errorResponse(e.getMessage(), ConfigValidation.STATUS_CODE_INTERNAL_SERVER_ERROR);
         }
         return responseMap;
@@ -59,14 +63,24 @@ public class MerchantServiceImpl implements MerchantService {
         Map<String, Object> responseMap = new HashMap<>();
 
         try {
+            if (merchantDto == null) {
+                return response.errorResponse(ConfigValidation.MERCHANT_DATA_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            } else if (merchantDto.getMerchantName() != null && merchantDto.getMerchantName().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.MERCHANT_NAME_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            } else if (merchantDto.getMerchantLocation() != null && merchantDto.getMerchantLocation().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.MERCHANT_LOCATION_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            }
+
             Optional<Merchant> existingMerchant = merchantRepository.findById(idMerchant);
 
             if (existingMerchant.isPresent()) {
                 Merchant updatedMerchant = existingMerchant.get();
-                if (merchantDto.getMerchantName() != null) {
+
+                if (merchantDto.getMerchantName() != null && !merchantDto.getMerchantName().trim().isEmpty()) {
                     updatedMerchant.setMerchantName(merchantDto.getMerchantName());
                 }
-                if (merchantDto.getMerchantLocation() != null) {
+
+                if (merchantDto.getMerchantLocation() != null && !merchantDto.getMerchantLocation().trim().isEmpty()) {
                     updatedMerchant.setMerchantLocation(merchantDto.getMerchantLocation());
                 }
 
@@ -82,6 +96,7 @@ public class MerchantServiceImpl implements MerchantService {
 
         return responseMap;
     }
+
 
 
     @Override
@@ -121,5 +136,15 @@ public class MerchantServiceImpl implements MerchantService {
             responseMap = response.errorResponse(ConfigValidation.ID_MERCHANT_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
         }
         return responseMap;
+    }
+
+    @Override
+    public Page<Merchant> getOpenMerchants(Pageable pageable) {
+        return merchantRepository.findOpenMerchants(pageable);
+    }
+
+    @Override
+    public Page<Merchant> getCloseMerchants(Pageable pageable) {
+        return merchantRepository.findClosedMerchants(pageable);
     }
 }

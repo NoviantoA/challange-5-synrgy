@@ -38,6 +38,9 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, UUID>,
     @Query("select count(od) from OrderDetail od where od.totalPrice = ?1")
     long countByTotalPrice(Double totalPrice);
 
+    @Query("SELECT od FROM OrderDetail od JOIN od.order o JOIN o.user u WHERE u.id = :userId")
+    Page<OrderDetail> findOrderDetailByUserId(@Param("userId") UUID userId, Pageable pageable);
+
     long count();
 
     @Query("select sum(od.id) from OrderDetail od")

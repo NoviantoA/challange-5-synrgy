@@ -5,6 +5,7 @@ import com.novianto.challange5.entity.Merchant;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,4 +20,6 @@ public interface MerchantService {
     Map<String, Object> deleteMerchant(UUID idMerchant);
 
     Map<String, Object> getMerchantById(UUID idMerchant);
+    Page<Merchant> getOpenMerchants(Pageable pageable);
+    Page<Merchant> getCloseMerchants(Pageable pageable);
 }

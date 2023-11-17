@@ -1,6 +1,7 @@
 package com.novianto.challange5.service.impl;
 
 import com.novianto.challange5.dto.OrderDto;
+import com.novianto.challange5.entity.Merchant;
 import com.novianto.challange5.entity.Order;
 import com.novianto.challange5.entity.User;
 import com.novianto.challange5.repository.OrderRepository;
@@ -38,36 +39,46 @@ public class OrderServiceImpl implements OrderService {
         if (orderDto == null) {
             return response.errorResponse(ConfigValidation.ORDER_DATA_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         } else {
-            if (!response.isValidDate(orderDto.getOrderTime())) {
+            if (orderDto.getOrderTime() == null) {
+                return response.errorResponse(ConfigValidation.ORDER_TIME_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            } else if (!response.isValidDate(orderDto.getOrderTime())) {
                 return response.errorResponse(ConfigValidation.ORDER_TIME_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
             }
         }
 
         try {
-            Order order = new Order();
-            order.setId(UUID.randomUUID());
-            order.setOrderTime(orderDto.getOrderTime());
-            order.setDestinationAddress(orderDto.getDestinationAddress());
-            order.setCompleted(false);
+            if (orderDto.getDestinationAddress() == null || orderDto.getDestinationAddress().trim().isEmpty()) {
+                return response.errorResponse(ConfigValidation.DESTINATION_ADDRESS_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+            }
 
-            if (orderDto.getUser() == null) {
+            if (orderDto.getUser() == null || orderDto.getUser().getId() == null || orderDto.getUser().getId().toString().trim().isEmpty()) {
                 return response.errorResponse(ConfigValidation.USER_REQUIRED, ConfigValidation.STATUS_CODE_BAD_REQUEST);
             }
 
-            UUID userId = orderDto.getUser().getId();
+            UUID userId = UUID.fromString(orderDto.getUser().getId().toString().trim());
             Optional<User> userOptional = userRepository.findById(userId);
 
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
+
+                Order order = new Order();
+                order.setId(UUID.randomUUID());
+                order.setOrderTime(orderDto.getOrderTime());
+                order.setDestinationAddress(orderDto.getDestinationAddress());
+                order.setCompleted(false);
                 order.setUser(user.getId());
+
                 Order savedOrder = orderRepository.save(order);
                 responseMap = response.successResponse(savedOrder);
             } else {
                 return response.errorResponse(ConfigValidation.ID_USER_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
             }
+        } catch (IllegalArgumentException e) {
+            return response.errorResponse(ConfigValidation.USER_ID_INVALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
         } catch (DataAccessException e) {
             responseMap = response.errorResponse(e.getMessage(), ConfigValidation.STATUS_CODE_INTERNAL_SERVER_ERROR);
         }
+
         return responseMap;
     }
 
@@ -80,6 +91,17 @@ public class OrderServiceImpl implements OrderService {
 
             if (existingOrder.isPresent()) {
                 Order updatedOrder = existingOrder.get();
+
+                // Validasi request body
+                if (orderDto.getOrderTime() != null && !response.isValidDate(orderDto.getOrderTime())) {
+                    return response.errorResponse(ConfigValidation.ORDER_TIME_NOT_VALID, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+
+                if (orderDto.getDestinationAddress() != null && orderDto.getDestinationAddress().trim().isEmpty()) {
+                    return response.errorResponse(ConfigValidation.DESTINATION_ADDRESS_EMPTY, ConfigValidation.STATUS_CODE_BAD_REQUEST);
+                }
+
+                // Update order properties
                 if (orderDto.getOrderTime() != null) {
                     updatedOrder.setOrderTime(orderDto.getOrderTime());
                 }
@@ -135,5 +157,10 @@ public class OrderServiceImpl implements OrderService {
             responseMap = response.errorResponse(ConfigValidation.ID_ORDER_NOT_FOUND, ConfigValidation.STATUS_CODE_NOT_FOUND);
         }
         return responseMap;
+    }
+
+    @Override
+    public Page<Order> getCompletedOrders(Pageable pageable) {
+        return orderRepository.findCompletedOrders(pageable);
     }
 }
